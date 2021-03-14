@@ -1,5 +1,7 @@
 import pymysql as mysql
-#import mysql.connector as mysql
+#import mysql.connector as mysql    (dodati posle u requirements.txt)
+
+# custom error types ?
 
 class Database:
     db = None
@@ -9,7 +11,7 @@ class Database:
         self.dbc = self.db.cursor()
     def execute(self, query):
         self.dbc.execute(query)
-        res = self.dbc.fetchall()
+        res = self.dbc.fetchall()   # dodati try/catch ako pukne ovaj request (mrezni problemi itd...)
         return res
     def update(self, table, fields, user):
         if not isinstance(table, str):
@@ -37,12 +39,15 @@ class Database:
                 raise TypeError("A 'fields' value must be type of 'int', 'float', 'bool' or 'str' only.")
             if i != length:
                 query += ","
-        self.dbc.execute(query)
+
+        self.dbc.execute(query) # dodati try/catch ako pukne ovaj request (mrezni problemi itd...)
+        # a i kasnije return ovog rezultata (return self.dbc.execute(query), nakon provere da li je u opste prosao)
 
 def _escape(text):
     return text.replace("'", "''")
 
 if __name__ == "__main__":
+    # *kasnije, ide citanje iz ENV varijable ovog dela
     USER = "web"
     HOST = "localhost"
     PASS = "webwebweb"

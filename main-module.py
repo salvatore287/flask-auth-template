@@ -1,11 +1,12 @@
 
 # -*- coding: utf-8 -*-
 from flask import Flask, Blueprint
+
+from services.mysql import * # Database
 from services.storage import sharedStorage
 
 from modules.auth import *
 from modules.protected import *
-from modules.mysql import *
 # from protected import *
 
 # initialize main Flask object
@@ -16,8 +17,9 @@ if __name__ == '__main__':
     # register app blueprints
     app.register_blueprint(authRoute)
     app.register_blueprint(protectedRoute)
+    # register DB routes later
 
-# make sure this is turned off
+# make sure this is turned or configured according to your needs
 @app.after_request
 def attachCORSHeader(response):
     response.headers.set('Access-Control-Allow-Headers', '*')
@@ -28,6 +30,8 @@ def attachCORSHeader(response):
 # ------------------------------
 @app.route('/')
 def home():
+    # This route returns a JSON of "users in the system"
+    # Replace it with your own logic
     output = []
     for user in sharedStorage.asList():
         output.append(str(user))
