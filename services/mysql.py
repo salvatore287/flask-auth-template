@@ -1,6 +1,6 @@
 import pymysql as mysql
 from os import environ
-#import mysql.connector    # (add to requirements.txt)
+#import mysql.connector as mysql    # (add to requirements.txt)
 
 class DBTypeError(TypeError):
     # raised when there's a database type error (currently supports 'str', 'float', 'int', 'None' and 'bool', datetime.datetime() and time.time() soon to come)
@@ -10,10 +10,16 @@ class Database:
     db = None
     dbc = None
     autocommit = True
-    def __init__(self, host, user, pwd, data, autocommit=True):
-        self.db = mysql.connect(host=host, user=user, password=pwd, database=data)
-        self.dbc = self.db.cursor()
-        self.autocommit = autocommit
+    autoreconnect = True
+    def __init__(self, host, user, pwd, data, port=3306, autocommit=True, autoreconnect=True):
+        try:
+            self.db = mysql.connect(host=host, user=user, password=pwd, database=data, port=port)
+            self.dbc = self.db.cursor()
+            self.autocommit = autocommit
+            self.db.ping(reconnect=autoreconnect)
+        except:
+            return None
+    """
     def execute(self, query):
         self.dbc.execute(query)
         try:
@@ -23,8 +29,10 @@ class Database:
             return res
         except Exception as e:
             return None
+    """
     def close(self):
-        self.db.close()
+        if self.db is not None:
+            self.db.close()
     def insertUser(self, table, fields):
         if not isinstance(table, str):
             raise TypeError("'table' param must be type of 'str'.")
@@ -33,6 +41,7 @@ class Database:
         length = len(fields)
         if length == 0:
             raise DBTypeError("'fields' parameter must not be empty.")
+        table = _escape(table)
         query = f"INSERT INTO {table} ("
         i = 0
         querypt1 = ''
@@ -60,9 +69,9 @@ class Database:
         try:
             query += querypt1 + ") VALUES (" + querypt2 + f")"
             self.dbc.execute(query)
-            return (0, "Pass")
-        except Exception as e:
-            return e
+            return True
+        except:
+            return False
     def updateUser(self, table, fields, user):
         if not isinstance(table, str):
             raise TypeError("'table' param must be type of 'str'.")
@@ -71,6 +80,8 @@ class Database:
         if not isinstance(user, str):
             raise TypeError("'user' param must be type of 'str'.")
         length = len(fields)
+        user = _escape(user)
+        table = _escape(table)
         if length == 0:
             raise DBTypeError("'fields' parameter must not be empty.")
         query = f"UPDATE {table} SET "
@@ -97,35 +108,42 @@ class Database:
             self.dbc.execute(query)
             if self.autocommit:
                 self.db.commit()
-            return (0, "Pass")
-        except Exception as e:
-            return e
+            return self.dbc.rowcount
+        except:
+            return -1
     def deleteUser(self, table, user):
         if not isinstance(table, str):
             raise TypeError("'table' param must be type of 'str'.")
         if not isinstance(user, str):
             raise TypeError("'user' param must be type of 'str'.")
+        user = _escape(user)
+        table = _escape(table)
         query = f"DELETE FROM {table} WHERE name = '{user}'"
         try:
             self.dbc.execute(query)
             if self.autocommit:
                 self.db.commit()
-            return (0, "Pass")
-        except Exception as e:
-            return e
+            return self.dbc.rowcount
+        except:
+            return -1
     def getUserData(self, table, user):
         if not isinstance(table, str):
             raise TypeError("'table' param must be type of 'str'.")
         if not isinstance(user, str):
             raise TypeError("'user' param must be type of 'str'.")
+        user = _escape(user)
+        table = _escape(table)
         query = f"SELECT * FROM {table} WHERE name = '{user}'"
         try:
             self.dbc.execute(query)
             if self.autocommit:
                 self.db.commit()
-            return ((0, "Pass"), self.dbc.fetchall())
-        except Exception as e:
-            return (e, None)
+            x = list(self.dbc.fetchall())
+            for i in range(len(x)):
+                x[i] = list(x[i])
+            return x
+        except:
+            return None
 
 def _escape(text):
     return text.replace("'", "''")
@@ -135,25 +153,29 @@ if __name__ == "__main__":
     """
     envget = environ.get
     HOST = envget("HOST")
+    PORT = envget("PORT")
     USER = envget("USER")
     PASS = envget("PASS")
     DATA = envget("DATA")
     """
-    USER = "web"
-    HOST = "localhost"
-    PASS = "webwebweb"
-    DATA = "flaskweb"
-    db = Database(HOST, USER, PASS, DATA)
+    USER = ""
+    HOST = ""
+    PASS = ""
+    DATA = ""
+    db = Database(HOST, USER, PASS, DATA, autocommit=True, autoreconnect=True)
     #x = db.execute("SELECT number,number2 FROM users WHERE name = 'test'")
-    x = db.getUserData("users", "test")
-    print(x) # error?
-    x = db.update("users", {"number": 77, "number2": 127.4}, "test")
-    print(x) 
-    #x = db.execute("SELECT number,number2 FROM users")
-    x = db.getUserData("users", "test")
-    print(x) # error? & output
-    x = db.insert("users", {"name":"test8","pwd":"x","salt":"y","token":"z","number":310,"number2":3.13421})
-    print(x) # error?
     x = db.getUserData("users", "test8")
-    print(x) # error? & output
-    db.close() # close the connection
+    print(f"Select: {x}")
+    x = db.insertUser("users", {"name":"test8","pwd":"x","salt":"y","token":"z","number":310,"number2":3.13421})
+    print(f"Insert: {x}") # successful insert?
+    x = db.getUserData("users", "test8")
+    print(f"Select: {x}")
+    x = db.updateUser("users", {"number": 72, "number2": 127.4}, "test8")
+    print(f"Update: {x}") # affected rows by using UPDATE
+    x = db.getUserData("users", "test8")
+    print(f"Select: {x}")
+    x = db.deleteUser("users", "test8")
+    print(f"Delete: {x}") # affected rows by using DELETE
+    x = db.getUserData("users", "test8")
+    print(f"Select: {x}")
+    db.close()
