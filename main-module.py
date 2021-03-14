@@ -36,19 +36,7 @@ def home():
         'storage': output
     })
 
-@app.route('/db')
-def db():
-    x = db.execute("SELECT VERSION() as version,NOW() as time")
-    res = {}
-    res["version"] = x[0][0]
-    res["time"] = x[0][1]
-    return jsonify(res)
-
 # ---------------------------------
 # Server start procedure
-db = None
 if __name__ == '__main__':
-    db = Database(HOST, USER, PASS, DATA)
-    if db == None:
-        exit("Failed to connect to the database.")
     app.run(debug=True)
