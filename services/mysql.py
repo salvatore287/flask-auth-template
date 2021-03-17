@@ -1,5 +1,5 @@
 import pymysql as mysql
-from os import environ
+#from os import environ
 #import mysql.connector as mysql    # (add to requirements.txt)
 
 class DBTypeError(TypeError):
@@ -35,9 +35,9 @@ class Database:
             self.db.close()
     def insertUser(self, table, fields):
         if not isinstance(table, str):
-            raise TypeError("'table' param must be type of 'str'.")
+            raise DBTypeError("'table' param must be type of 'str'.")
         if not isinstance(fields, dict):
-            raise TypeError("'fields' param must be type of 'dict', ie. Dict['field'] = value")
+            raise DBTypeError("'fields' param must be type of 'dict', ie. Dict['field'] = value")
         length = len(fields)
         if length == 0:
             raise DBTypeError("'fields' parameter must not be empty.")
@@ -50,7 +50,7 @@ class Database:
             i += 1
             key = _escape(key)
             if not isinstance(key, str):
-                raise TypeError("A 'fields' key must be type of 'str' only.")
+                raise DBTypeError("A 'fields' key must be type of 'str' only.")
             if isinstance(fields[key], str):
                 fields[key] = _escape(fields[key])
                 querypt1 += f"{key}"
@@ -62,7 +62,7 @@ class Database:
                 querypt1 += f"{key}"
                 querypt2 += f"NULL"
             else:
-                raise TypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
+                raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
             if i != length:
                 querypt1 += ","
                 querypt2 += ","
@@ -74,11 +74,11 @@ class Database:
             return False
     def updateUser(self, table, fields, user):
         if not isinstance(table, str):
-            raise TypeError("'table' param must be type of 'str'.")
+            raise DBTypeError("'table' param must be type of 'str'.")
         if not isinstance(fields, dict):
-            raise TypeError("'fields' param must be type of 'dict', ie. Dict['field'] = value")
+            raise DBTypeError("'fields' param must be type of 'dict', ie. Dict['field'] = value")
         if not isinstance(user, str):
-            raise TypeError("'user' param must be type of 'str'.")
+            raise DBTypeError("'user' param must be type of 'str'.")
         length = len(fields)
         user = _escape(user)
         table = _escape(table)
@@ -90,7 +90,7 @@ class Database:
             i += 1
             key = _escape(key)
             if not isinstance(key, str):
-                raise TypeError("A 'fields' key must be type of 'str' only.")
+                raise DBTypeError("A 'fields' key must be type of 'str' only.")
             if isinstance(fields[key], str):
                 fields[key] = _escape(fields[key])
                 query += f"{key} = '{fields[key]}'"
@@ -99,7 +99,7 @@ class Database:
             elif fields[key] is None:
                 query =+ f"{key} = NULL"
             else:
-                raise TypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
+                raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
             if i != length:
                 query += ","
         user = _escape(user)
@@ -113,9 +113,9 @@ class Database:
             return -1
     def deleteUser(self, table, user):
         if not isinstance(table, str):
-            raise TypeError("'table' param must be type of 'str'.")
+            raise DBTypeError("'table' param must be type of 'str'.")
         if not isinstance(user, str):
-            raise TypeError("'user' param must be type of 'str'.")
+            raise DBTypeError("'user' param must be type of 'str'.")
         user = _escape(user)
         table = _escape(table)
         query = f"DELETE FROM {table} WHERE name = '{user}'"
@@ -128,9 +128,9 @@ class Database:
             return -1
     def getUserData(self, table, user):
         if not isinstance(table, str):
-            raise TypeError("'table' param must be type of 'str'.")
+            raise DBTypeError("'table' param must be type of 'str'.")
         if not isinstance(user, str):
-            raise TypeError("'user' param must be type of 'str'.")
+            raise DBTypeError("'user' param must be type of 'str'.")
         user = _escape(user)
         table = _escape(table)
         query = f"SELECT * FROM {table} WHERE name = '{user}'"
