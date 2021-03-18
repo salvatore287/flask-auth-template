@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 import datetime
 
+# rename kao i u mysql
+
 class DBError(Exception):
     """ raised on critical db errors """
     pass
@@ -11,8 +13,8 @@ class Database:
     def __init__(self, host, user, pwd, data, port=27017):
         try:
             self.client = MongoClient(f"mongodb://{user}:{pwd}@{host}:{port}/{data}")
-            print(self.client)
             self.db = self.client[data]
+            print(self.client)
             print(self.db)
         except:
             raise DBError("Failed to connect.")
@@ -49,7 +51,7 @@ class Database:
         except Exception as e:
             print("SELECT EXCEPTION", e)
             return None
-    
+
 
 if __name__ == "__main__":
     HOST = ""

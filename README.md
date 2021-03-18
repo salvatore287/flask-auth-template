@@ -16,9 +16,7 @@ For more convenient mechanism, store your tokens in some form of persistent stor
 Data handling services supported so far:
 1. SharedStorage (trivial implementation of in-memory storage)
 2. MySQL wrapper
-3. *(soon) MongoDB wrapper*
-
-*NOTE:* More data handling services to be added soon.
+3. MongoDB wrapper
 
 ### Modularised
 Template is designed to support modular structure. Main application modules are stored in `modules` folder. If you need more modules, you can place them inside - as long as they are connected in the main module. Customize your Flask bluperints to support modularized approach you need.
