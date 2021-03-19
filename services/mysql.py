@@ -10,6 +10,20 @@ class Database:
     autocommit = True
     autoreconnect = True
     def __init__(self, host, user, pwd, data, port=3306, autocommit=True, autoreconnect=True):
+        if not isinstance(host, str):
+            raise DBTypeError("'host' param must be type of 'str'.")
+        if not isinstance(user, str):
+            raise DBTypeError("'user' param must be type of 'str'.")
+        if not isinstance(pwd, str):
+            raise DBTypeError("'pwd' param must be type of 'str'.")
+        if not isinstance(data, str):
+            raise DBTypeError("'data' param must be type of 'str'.")
+        if not isinstance(port, int):
+            raise DBTypeError("'port' param must be type of 'int'.")
+        if not isinstance(autocommit, bool):
+            raise DBTypeError("'port' param must be type of 'bool'.")
+        if not isinstance(autoreconnect, bool):
+            raise DBTypeError("'port' param must be type of 'bool'.")
         try:
             self.db = mysql.connect(host=host, user=user, password=pwd, database=data, port=port)
             self.dbc = self.db.cursor()
@@ -17,20 +31,11 @@ class Database:
             self.db.ping(reconnect=autoreconnect)
         except:
             return None
-    """
-    def execute(self, query):
-        self.dbc.execute(query)
-        try:
-            res = self.dbc.fetchall()
-            if self.autocommit:
-                self.db.commit()
-            return res
-        except Exception as e:
-            return None
-    """
+
     def close(self):
         if self.db is not None:
             self.db.close()
+
     def insert(self, table, fields):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -70,6 +75,7 @@ class Database:
             return True
         except:
             return False
+
     def update(self, table, userID, fields):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -108,6 +114,7 @@ class Database:
             return self.dbc.rowcount
         except:
             return -1
+
     def delete(self, table, userID):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -122,6 +129,7 @@ class Database:
             return self.dbc.rowcount
         except:
             return -1
+
     def filter(self, table, userName):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -159,19 +167,18 @@ if __name__ == "__main__":
     PASS = ""
     DATA = ""
     db = Database(HOST, USER, PASS, DATA, autocommit=True, autoreconnect=True)
-    #x = db.execute("SELECT number,number2 FROM users WHERE name = 'test'")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
     x = db.insert("users", {"name":"test8","pwd":"x","salt":"y","token":"z","number":310,"number2":3.13421})
-    print(f"Insert: {x}") # successful insert?
+    print(f"Insert: {x}")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
     x = db.update("users", "45", {"number": 72, "number2": 127.4})
-    print(f"Update: {x}") # affected rows by using UPDATE
+    print(f"Update: {x}")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
     x = db.delete("users", "3")
-    print(f"Delete: {x}") # affected rows by using DELETE
+    print(f"Delete: {x}")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
     db.close()
