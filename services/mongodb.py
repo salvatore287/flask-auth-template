@@ -1,10 +1,12 @@
 from pymongo import MongoClient
 import datetime
 
-# rename kao i u mysql
-
 class DBError(Exception):
     """ raised on critical db errors """
+    pass
+
+class DBTypeError(Exception):
+    """ raised on db type errors """
     pass
 
 class Database:
@@ -12,65 +14,76 @@ class Database:
     db = None
     def __init__(self, host, user, pwd, data, port=27017):
         try:
-            self.client = MongoClient(f"mongodb://{user}:{pwd}@{host}:{port}/{data}")
+            self.client = MongoClient(f"mongodb://{user}:{pwd}@{host}:{port}/")
             self.db = self.client[data]
             print(self.client)
             print(self.db)
         except:
             raise DBError("Failed to connect.")
-    def insertUser(self, collection, user, fields):
+    def close(self):
+        if self.db is not None:
+            self.db.close()
+    def insert(self, collection, fields):
         try:
             col = self.db[collection]
-            doc = {"name": user, **fields}
-            return col.insert_one(doc)
-        except Exception as e:
-            print("INSERT EXCEPTION", e)
+            return col.insert_one(fields)
+        except:
             return None
-    def updateUser(self, collection, user, fields):
+    def update(self, collection, userID, fields):
+        if not isinstance(collection, str):
+            raise DBTypeError("'collection' param must be type of 'str'.")
+        if not isinstance(fields, dict):
+            raise DBTypeError("'fields' param must be type of 'dict'.")
+        if not isinstance(userID, str):
+            raise DBTypeError("'userID' param must be type of 'str'.")
         try:
             col = self.db[collection]
-            res = col.update_many({"name": user}, {"$set": fields})
+            res = col.update_many({"id": userID}, {"$set": fields})
             return res.modified_count
-        except Exception as e:
-            print("UPDATE EXCEPTION", e)
+        except:
             return None
-    def deleteUser(self, collection, user):
+    def delete(self, collection, userID):
+        if not isinstance(collection, str):
+            raise DBTypeError("'collection' param must be type of 'str'.")
+        if not isinstance(userID, str):
+            raise DBTypeError("'userID' param must be type of 'str'.")
         try:
             col = self.db[collection]
-            res = col.delete_many({"name": user})
+            res = col.delete_many({"id": userID})
             return res.deleted_count
-        except Exception as e:
-            print("DELETE EXCEPTION", e)
+        except:
             return -1
-    def getUserData(self, collection, user):
+    def filter(self, collection, userName):
+        if not isinstance(collection, str):
+            raise DBTypeError("'collection' param must be type of 'str'.")
+        if not isinstance(userName, str):
+            raise DBTypeError("'userName' param must be type of 'str'.")
         try:
             col = self.db[collection]
-            res = col.find({"name": user})
-            res = {}
+            res = col.find({"name": userName})
             return res
-        except Exception as e:
-            print("SELECT EXCEPTION", e)
+        except:
             return None
 
 
 if __name__ == "__main__":
-    HOST = ""
+    HOST = "localhost"
     PORT = 27017
-    USER = ""
-    PASS = ""
-    DATA = ""
+    USER = "Admin"
+    PASS = "Pwd"
+    DATA = "admin"
     db = Database(HOST, USER, PASS, DATA, PORT)
-    x = db.getUserData("users", "testUser1")
+    x = db.filter("users", "testUser1")
     print(f"Find: {x}")
-    x = db.insertUser("users", "testUser1", {"number": 3, "number2": 3.5, "addedOn": datetime.datetime.now()})
+    x = db.insert("users", {"name": "testUser1", "number": 3, "number2": 3.5, "addedOn": datetime.datetime.now()})
     print(f"Insert: {x}") #x.inserted_id
-    x = db.getUserData("users", "testUser1")
+    x = db.filter("users", "testUser1")
     print(f"Find: {x}")
-    x = db.updateUser("users", "testUser1", {"number": 5, "number2": 7.75})
+    x = db.update("users", "testUser1", {"number": 5, "number2": 7.75})
     print(f"Update: {x}")
-    x = db.getUserData("users", "testUser1")
+    x = db.filter("users", "testUser1")
     print(f"Find: {x}")
-    x = db.deleteUser("users", "testUser1")
+    x = db.delete("users", "testUser1")
     print(f"Delete: {x}")
-    x = db.getUserData("users", "testUser1")
+    x = db.filter("users", "testUser1")
     print(f"Find: {x}")

@@ -65,7 +65,7 @@ class Database:
                 querypt1 += ","
                 querypt2 += ","
         try:
-            query += querypt1 + ") VALUES (" + querypt2 + f")"
+            query += querypt1 + ") VALUES (" + querypt2 + ")"
             self.dbc.execute(query)
             return True
         except:
@@ -75,8 +75,8 @@ class Database:
             raise DBTypeError("'table' param must be type of 'str'.")
         if not isinstance(fields, dict):
             raise DBTypeError("'fields' param must be type of 'dict', ie. Dict['field'] = value")
-        if not isinstance(userID, str):
-            raise DBTypeError("'userID' param must be type of 'str'.")
+        if not isinstance(userID, int):
+            raise DBTypeError("'userID' param must be type of 'int'.")
         length = len(fields)
         userID = _escape(userID)
         table = _escape(table)
@@ -100,8 +100,7 @@ class Database:
                 raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
             if i != length:
                 query += ","
-        user = _escape(user)
-        query += f" WHERE ID = '{userID}'"  # update preko userID-a
+        query += f" WHERE ID = {userID}"  # update preko userID-a
         try:
             self.dbc.execute(query)
             if self.autocommit:
@@ -112,11 +111,10 @@ class Database:
     def delete(self, table, userID):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
-        if not isinstance(user, str):
-            raise DBTypeError("'user' param must be type of 'str'.")
-        user = _escape(user)
+        if not isinstance(userID, int):
+            raise DBTypeError("'userID' param must be type of 'int'.")
         table = _escape(table)
-        query = f"DELETE FROM {table} WHERE ID = '{userId}'"    # delete ide po ID
+        query = f"DELETE FROM {table} WHERE ID = {userID}"    # delete ide po ID
         try:
             self.dbc.execute(query)
             if self.autocommit:
@@ -127,9 +125,9 @@ class Database:
     def filter(self, table, userName):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
-        if not isinstance(user, str):
-            raise DBTypeError("'user' param must be type of 'str'.")
-        user = _escape(user)
+        if not isinstance(userName, str):
+            raise DBTypeError("'userName' param must be type of 'str'.")
+        userName = _escape(userName)
         table = _escape(table)
         query = f"SELECT * FROM {table} WHERE name = '{userName}'"
         try:
