@@ -7,4 +7,10 @@ __pycache__/
 
 # VS Code Workspace
 *.code-workspace
+.vscode
+_config.yml
 
+# Virtual Env
+bin
+pyvenv.cfg
+lib

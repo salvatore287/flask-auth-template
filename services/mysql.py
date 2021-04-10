@@ -1,7 +1,13 @@
 import pymysql as mysql
+import datetime
+import time
+
+class DBError(Exception):
+    # raised when there's a fatal database error
+    pass
 
 class DBTypeError(TypeError):
-    # raised when there's a database type error (currently supports 'str', 'float', 'int', 'None' and 'bool', datetime.datetime() and time.time() soon to come)
+    # raised when there's a database type error (currently supports 'str', 'float', 'int', 'None', 'bool' and datetime.datetime)
     pass
 
 class Database:
@@ -29,8 +35,8 @@ class Database:
             self.dbc = self.db.cursor()
             self.autocommit = autocommit
             self.db.ping(reconnect=autoreconnect)
-        except:
-            return None
+        except Exception as e:
+            raise DBError(f"Exception while trying to connect to the database: {e}")
 
     def close(self):
         if self.db is not None:
@@ -64,8 +70,11 @@ class Database:
             elif fields[key] is None:
                 querypt1 += f"{key}"
                 querypt2 += f"NULL"
+            elif isinstance(fields[key], datetime.datetime):
+                querypt1 += f"{key}"
+                querypt2 += f"'{fields[key].strftime('%Y%m%d%H%M%S')}'"
             else:
-                raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
+                raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str', 'datetime.datetime' or 'None' only.")
             if i != length:
                 querypt1 += ","
                 querypt2 += ","
@@ -73,7 +82,8 @@ class Database:
             query += querypt1 + ") VALUES (" + querypt2 + ")"
             self.dbc.execute(query)
             return True
-        except:
+        except Exception as e:
+            print(e)
             return False
 
     def update(self, table, userID, fields):
@@ -84,7 +94,6 @@ class Database:
         if not isinstance(userID, int):
             raise DBTypeError("'userID' param must be type of 'int'.")
         length = len(fields)
-        userID = _escape(userID)
         table = _escape(table)
         if length == 0:
             raise DBTypeError("'fields' parameter must not be empty.")
@@ -100,19 +109,21 @@ class Database:
                 query += f"{key} = '{fields[key]}'"
             elif isinstance(fields[key], int) or isinstance(fields[key], float) or isinstance(fields[key], bool):
                 query += f"{key} = {fields[key]}"
+            elif isinstance(fields[key], datetime.datetime):
+                query += f"{fields[key].strftime('%Y%m%d%H%M%S')}"
             elif fields[key] is None:
                 query =+ f"{key} = NULL"
             else:
-                raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str' or 'None' only.")
+                raise DBTypeError("A 'fields' value must be type of 'int', 'float', 'bool', 'str', 'datetime.datetime' or 'None' only.")
             if i != length:
                 query += ","
-        query += f" WHERE ID = {userID}"  # update preko userID-a
+        query += f" WHERE ID = {userID}"
         try:
             self.dbc.execute(query)
             if self.autocommit:
                 self.db.commit()
             return self.dbc.rowcount
-        except:
+        except Exception:
             return -1
 
     def delete(self, table, userID):
@@ -121,13 +132,13 @@ class Database:
         if not isinstance(userID, int):
             raise DBTypeError("'userID' param must be type of 'int'.")
         table = _escape(table)
-        query = f"DELETE FROM {table} WHERE ID = {userID}"    # delete ide po ID
+        query = f"DELETE FROM {table} WHERE ID = {userID}"
         try:
             self.dbc.execute(query)
             if self.autocommit:
                 self.db.commit()
             return self.dbc.rowcount
-        except:
+        except Exception:
             return -1
 
     def filter(self, table, userName):
@@ -146,38 +157,33 @@ class Database:
             for i in range(len(x)):
                 x[i] = list(x[i])
             return x
-        except:
+        except Exception:
             return None
 
 def _escape(text):
     return text.replace("'", "''")
 
 if __name__ == "__main__":
-    # *kasnije, ide citanje iz ENV varijable ovog dela ---> odg: svakako je privremeno, za testiranje
-    """
-    envget = environ.get
-    HOST = envget("HOST")
-    PORT = envget("PORT")
-    USER = envget("USER")
-    PASS = envget("PASS")
-    DATA = envget("DATA")
-    """
-    USER = ""
-    HOST = ""
-    PASS = ""
-    DATA = ""
+    from os import environ
+    HOST = environ["HOST"]
+    PORT = environ["PORT"]
+    USER = environ["USER"]
+    PASS = environ["PASS"]
+    DATA = environ["DATA"]
     db = Database(HOST, USER, PASS, DATA, autocommit=True, autoreconnect=True)
     x = db.filter("users", "test8")
     print(f"Select: {x}")
-    x = db.insert("users", {"name":"test8","pwd":"x","salt":"y","token":"z","number":310,"number2":3.13421})
+    d = datetime.datetime(year=2020, month=3, day=5, hour=17, minute=10, second=59)
+    x = db.insert("users", {"name":"test8","pwd":"x","salt":"y","token":"z","number":310,"number2":3.13421,"date":d})
     print(f"Insert: {x}")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
-    x = db.update("users", "45", {"number": 72, "number2": 127.4})
+    _id = x[0][0]
+    x = db.update("users", _id, {"number": 72, "number2": 127.4})
     print(f"Update: {x}")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
-    x = db.delete("users", "3")
+    x = db.delete("users", _id)
     print(f"Delete: {x}")
     x = db.filter("users", "test8")
     print(f"Select: {x}")
