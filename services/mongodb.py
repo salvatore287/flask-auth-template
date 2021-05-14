@@ -58,14 +58,13 @@ class Database:
         except:
             return -1
 
-    def filter(self, collection, userName):
+    def filter(self, collection, filterCriteria):
         if not isinstance(collection, str):
             raise DBTypeError("'collection' param must be type of 'str'.")
-        if not isinstance(userName, str):
-            raise DBTypeError("'userName' param must be type of 'str'.")
+
         try:
             col = self.db[collection]
-            res = col.find({"name": userName})
+            res = col.find(filterCriteria)
             return res
         except:
             return None
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     print(f"Find: {x}")
     x = db.update("users", "testUser1", {"number": 5, "number2": 7.75})
     print(f"Update: {x}")
-    x = db.filter("users", "testUser1")
+    x = db.filter("users", "{user: 'testUser1'}")
     print(f"Find: {x}")
     x = db.delete("users", "testUser1")
     print(f"Delete: {x}")

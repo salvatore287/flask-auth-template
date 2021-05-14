@@ -1,8 +1,9 @@
 
 # -*- coding: utf-8 -*-
+from services.mongodb import Database
 from flask import Flask, Blueprint
 
-from services.mysql import * # Database
+# services.* are used as DB hooks below
 from services.storage import sharedStorage
 
 from modules.auth import *
@@ -39,6 +40,40 @@ def home():
         'count': sharedStorage.totalCount(),
         'storage': output
     })
+
+# Publicly accessible routes with DB support
+# ------------------------------
+@app.route('/mongo_db')
+def mongo_db():
+    from services.mongodb import Database
+
+    # This route returns a list of data from a "User" collection
+    # it assumes having valid MongoDB connection
+    # Replace it with your own logic
+    mongoClient = Database("localhost", "user", "pwd")
+
+    output = []
+    output = mongoClient.filter("mainCollection", "{'name': 'someName'}")
+
+    # format JSON response
+    response = jsonify({'results': output}) 
+    return response
+
+@app.route('/sql_db')
+def mongo_db():
+    from services.mysql import Database
+
+    # This route returns a list of data from a "User" collection
+    # it assumes having valid MongoDB connection
+    # Replace it with your own logic
+    sqlClient = Database()
+
+    output = []
+    output = sqlClient.filter("someTable", "user123")
+
+    # format JSON response
+    response = jsonify({'results': output}) 
+    return response
 
 # ---------------------------------
 # Server start procedure
