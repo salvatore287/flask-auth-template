@@ -9,6 +9,7 @@ class Database:
     dbc = None
     autocommit = True
     autoreconnect = True
+
     def __init__(self, host, user, pwd, data, port=3306, autocommit=True, autoreconnect=True):
         try:
             self.db = mysql.connect(host=host, user=user, password=pwd, database=data, port=port)
@@ -31,6 +32,7 @@ class Database:
     def close(self):
         if self.db is not None:
             self.db.close()
+
     def insert(self, table, fields):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -70,6 +72,7 @@ class Database:
             return True
         except:
             return False
+
     def update(self, table, userID, fields):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -108,6 +111,7 @@ class Database:
             return self.dbc.rowcount
         except:
             return -1
+
     def delete(self, table, userID):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -122,6 +126,7 @@ class Database:
             return self.dbc.rowcount
         except:
             return -1
+
     def filter(self, table, userName):
         if not isinstance(table, str):
             raise DBTypeError("'table' param must be type of 'str'.")
@@ -144,16 +149,10 @@ class Database:
 def _escape(text):
     return text.replace("'", "''")
 
+#
+# Example usage as a standalone module
+#
 if __name__ == "__main__":
-    # *kasnije, ide citanje iz ENV varijable ovog dela ---> odg: svakako je privremeno, za testiranje
-    """
-    envget = environ.get
-    HOST = envget("HOST")
-    PORT = envget("PORT")
-    USER = envget("USER")
-    PASS = envget("PASS")
-    DATA = envget("DATA")
-    """
     USER = ""
     HOST = ""
     PASS = ""

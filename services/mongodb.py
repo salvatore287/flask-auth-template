@@ -12,6 +12,7 @@ class DBTypeError(Exception):
 class Database:
     client = None
     db = None
+
     def __init__(self, host, user, pwd, data, port=27017):
         try:
             self.client = MongoClient(f"mongodb://{user}:{pwd}@{host}:{port}/")
@@ -20,39 +21,43 @@ class Database:
             print(self.db)
         except:
             raise DBError("Failed to connect.")
+
     def close(self):
         if self.db is not None:
             self.db.close()
+
     def insert(self, collection, fields):
         try:
             col = self.db[collection]
             return col.insert_one(fields)
         except:
             return None
-    def update(self, collection, userID, fields):
+
+    def update(self, collection, objectID, fields):
         if not isinstance(collection, str):
             raise DBTypeError("'collection' param must be type of 'str'.")
         if not isinstance(fields, dict):
             raise DBTypeError("'fields' param must be type of 'dict'.")
-        if not isinstance(userID, str):
-            raise DBTypeError("'userID' param must be type of 'str'.")
+
         try:
             col = self.db[collection]
-            res = col.update_many({"id": userID}, {"$set": fields})
+            res = col.update_many({"id": objectID}, {"$set": fields})
             return res.modified_count
         except:
             return None
-    def delete(self, collection, userID):
+
+    def delete(self, collection, objectID):
         if not isinstance(collection, str):
             raise DBTypeError("'collection' param must be type of 'str'.")
-        if not isinstance(userID, str):
-            raise DBTypeError("'userID' param must be type of 'str'.")
+        if not isinstance(objectID, str):
+            raise DBTypeError("'objectID' param must be type of 'str' or 'ObjectID'.")
         try:
             col = self.db[collection]
-            res = col.delete_many({"id": userID})
+            res = col.delete_many({"id": objectID})
             return res.deleted_count
         except:
             return -1
+
     def filter(self, collection, userName):
         if not isinstance(collection, str):
             raise DBTypeError("'collection' param must be type of 'str'.")
@@ -66,12 +71,16 @@ class Database:
             return None
 
 
+#
+# Example usage as a standalone module
+#
 if __name__ == "__main__":
     HOST = "localhost"
     PORT = 27017
     USER = "Admin"
     PASS = "Pwd"
     DATA = "admin"
+
     db = Database(HOST, USER, PASS, DATA, PORT)
     x = db.filter("users", "testUser1")
     print(f"Find: {x}")
